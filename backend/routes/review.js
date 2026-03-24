@@ -1,52 +1,52 @@
 import express from "express";
-import OpenAI from "openai";
+import fetch from "node-fetch";
+import Review from "../models/Review.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
     console.log("API HIT");
-    console.log("KEY:", process.env.OPENROUTER_API_KEY); // 🔍 debug
-
-    // ✅ Initialize client HERE (after dotenv loads)
-    const client = new OpenAI({
-      baseURL: "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
 
     const { code, language } = req.body;
 
-    const prompt = `
-You are a strict code reviewer.
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: `Analyze this ${language} code and return STRICT JSON:
 
-IMPORTANT:
-- Return ONLY valid JSON
-- Do NOT add explanation
-- Do NOT add text before/after JSON
-
-Format:
 {
-  "score": "1-10",
-  "issues": ["..."],
-  "suggestions": ["..."],
-  "improved_code": "..."
+  "score": "",
+  "issues": [],
+  "suggestions": [],
+  "improved_code": ""
 }
 
 Code:
-${code}
-`;
-
-    const response = await client.chat.completions.create({
-      model: "meta-llama/llama-3-8b-instruct",
-      messages: [{ role: "user", content: prompt }],
+${code}`
+          }
+        ]
+      })
     });
 
-    const result = response.choices[0].message.content;
+    const data = await response.json();
+
+    console.log("AI RESPONSE:", data);
+
+    const result = data.choices?.[0]?.message?.content || "No response";
 
     res.json({ result });
 
   } catch (err) {
-    console.log("ERROR:", err.message);
+    console.error("BACKEND ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });

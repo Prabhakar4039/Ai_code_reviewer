@@ -22,7 +22,7 @@ function App() {
     try {
       setLoading(true);
 
-      const res = await axios.post("https://ai-code-reviewer-f3s9.onrender.com/api/review", {
+      const res = await axios.post("https://ai-code-reviewer-1-jadn.onrender.com/api/review", {
         code,
         language,
       });

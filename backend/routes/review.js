@@ -1,5 +1,4 @@
 import express from "express";
-import fetch from "node-fetch";
 import Review from "../models/Review.js";
 
 const router = express.Router();
